@@ -32,7 +32,7 @@ public class Jump implements ActionListener, MouseListener
     
     public Rectangle player;
     
-    public int ticks, yMotion, time, totalSpace, score, force, forceLength;
+    public int ticks, yMotion, totalSpace, score, force, forceLength;
     
     public boolean started, gameOver, jumped, landed, mousePressed;
     
@@ -86,11 +86,11 @@ public class Jump implements ActionListener, MouseListener
         
         if(start && columns.size()==0)
         {
-            columns.add(new Rectangle(100, HEIGHT - 300 - 120, width, 300));///////////////
+            columns.add(new Rectangle(100, HEIGHT - 300 - 120, width, 300));
         }
         else if(start)
         {
-            columns.add(new Rectangle(columns.get(columns.size() - 1).x + space, HEIGHT - height - 120, width, height));///////////////
+            columns.add(new Rectangle(columns.get(columns.size() - 1).x + space, HEIGHT - height - 120, width, height));
             spaces.add(space); //save the space value into the space arraylist
         }
         
@@ -131,8 +131,6 @@ public class Jump implements ActionListener, MouseListener
                 forceLength = 780 - forceLength;
             }
             
-            //time = (int) (forceLength * 3.64); //pass the force magnitude to the distance
-            
             if(player.y >= (HEIGHT - 120 - columns.get(0).y) && ((player.x + 20) > columns.get(0).x && player.x < (columns.get(0).x + 100)))
             {
                 player.y = columns.get(0).y - 20;
@@ -168,28 +166,7 @@ public class Jump implements ActionListener, MouseListener
                 jumped = false;
                 player.x = (int) (180 + (forceLength * 3.58974)); //3.58974 is the ratio of distance to force magnitude (1400/390)
                 player.y = 100;
-            }
-            
-            /*if(gameOver && restart)
-            {
-                gameOver = false;
-                columns.clear();
-                spaces.clear();
-                
-                addColumn(true);
-                addColumn(true);
-                addColumn(true);
-                addColumn(true);
-                addColumn(true);
-                addColumn(true);
-                addColumn(true);
-                addColumn(true);
-                
-                player.x = 180;
-                player.y = columns.get(0).y - 20;
-                
-            }*/
-            
+            }    
         }
         renderer.repaint();
     }
