@@ -131,7 +131,7 @@ public class Jump implements ActionListener, MouseListener
                 forceLength = 780 - forceLength;
             }
             
-            time = (int) (forceLength * 3.64);
+            //time = (int) (forceLength * 3.64); //pass the force magnitude to the distance
             
             if(player.y >= (HEIGHT - 120 - columns.get(0).y) && ((player.x + 20) > columns.get(0).x && player.x < (columns.get(0).x + 100)))
             {
@@ -166,7 +166,7 @@ public class Jump implements ActionListener, MouseListener
             if(jumped)
             {
                 jumped = false;
-                player.x = 180 + (time*700/1000);
+                player.x = (int) (180 + (forceLength * 3.58974)); //3.58974 is the ratio of distance to force magnitude (1400/390)
                 player.y = 100;
             }
             
