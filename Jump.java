@@ -1,5 +1,3 @@
- 
-
 
 /**
  * This is a "Drop!" game for the final project.
@@ -32,7 +30,7 @@ public class Jump implements ActionListener, MouseListener
     
     public Rectangle player;
     
-    public int ticks, yMotion, time, totalSpace, score, force, forceLength;
+    public int ticks, yMotion, time, totalSpace, score, force, forceLength, life, highestScore;
     
     public boolean started, gameOver, jumped, landed, mousePressed;
     
@@ -72,7 +70,7 @@ public class Jump implements ActionListener, MouseListener
         addColumn(true);
         addColumn(true);
         addColumn(true); //add 8 columns at the beginning
-        
+        life = 3; //players have three lives
               
         timer.start();
         
@@ -117,6 +115,7 @@ public class Jump implements ActionListener, MouseListener
             {
                 player.y = HEIGHT - 120 - player.height;
                 gameOver = true;
+                life--; 
                 //restart = false;
             }
             
@@ -170,26 +169,6 @@ public class Jump implements ActionListener, MouseListener
                 player.y = 100;
             }
             
-            /*if(gameOver && restart)
-            {
-                gameOver = false;
-                columns.clear();
-                spaces.clear();
-                
-                addColumn(true);
-                addColumn(true);
-                addColumn(true);
-                addColumn(true);
-                addColumn(true);
-                addColumn(true);
-                addColumn(true);
-                addColumn(true);
-                
-                player.x = 180;
-                player.y = columns.get(0).y - 20;
-                
-            }*/
-            
         }
         renderer.repaint();
     }
@@ -214,48 +193,102 @@ public class Jump implements ActionListener, MouseListener
         g.setColor(Color.red);
         g.fillRect(WIDTH / 2 - 195, HEIGHT-85, forceLength, 40); //magintude of force
         
+        if(life == 3)
+        {
+            g.setColor(Color.red);
+            g.fillRect(1560, 20, 20, 20);
+            g.fillRect(1530, 20, 20, 20);
+            g.fillRect(1500, 20, 20, 20);
+        }
+        
+        if(life == 2)
+        {
+            g.setColor(Color.red);
+            g.fillRect(1560, 20, 20, 20);
+            g.fillRect(1530, 20, 20, 20);
+            
+            g.setColor(Color.gray);
+            g.fillRect(1500, 20, 20, 20);
+        }
+        
+        if(life == 1)
+        {
+            g.setColor(Color.red);
+            g.fillRect(1560, 20, 20, 20);
+            
+            g.setColor(Color.gray);
+            g.fillRect(1530, 20, 20, 20);
+            g.fillRect(1500, 20, 20, 20);
+        }
+        
+        if(life == 0)
+        {
+            g.setColor(Color.gray);
+            g.fillRect(1560, 20, 20, 20);
+            g.fillRect(1530, 20, 20, 20);
+            g.fillRect(1500, 20, 20, 20);
+        }
+        
         for(Rectangle column : columns)
         {
             paintColumn(g, column);
         } //paint columns
-        
-        g.setColor(Color.white);
-        g.setFont(new Font("Arial", 1, 100));
-        
+         
         if(!started)
         {
+            g.setColor(Color.white);
+            g.setFont(new Font("Arial", 1, 100));
             g.drawString("Press the mouse to start!", 100, HEIGHT / 2-50);
         }
         
-        if(gameOver)
+        if(gameOver && life > 1)
         {
+            g.setColor(Color.white);
+            g.setFont(new Font("Arial", 1, 100));
+            g.drawString("Click to jump again.", 75, HEIGHT / 2-50);
+        }
+        
+        if(gameOver && life == 1)
+        {
+            g.setColor(Color.white);
+            g.setFont(new Font("Arial", 1, 100));
+            g.drawString("Click to jump again.", 75, HEIGHT / 2-50);
+        }
+        
+        if(gameOver && life == 0)
+        {
+            if(score >= highestScore)
+            {
+                highestScore = score;
+            }
+            g.setColor(Color.white);
+            g.setFont(new Font("Arial", 1, 100));
             g.drawString("Game Over! Your Score: " + score, 75, HEIGHT / 2-50);
+
+            g.setColor(Color.white);
+            g.setFont(new Font("Arial", 1, 40));
+            g.drawString("Your Highest Score: " + highestScore, 75, HEIGHT / 2);
+            g.drawString("This game is programmed by Qifan Yang & Ruobing(Icy) Chen.", 75, HEIGHT / 2 + 50);
+            
+            g.setColor(Color.yellow);
+            g.setFont(new Font("Arial", 1, 40));
+            g.drawString("Click to restart the game.", 75, HEIGHT / 2 + 125);
         }
         
         if(!gameOver && started)
         {
-            g.drawString(String.valueOf(score), WIDTH/2-25, 100);
+            g.setColor(Color.white);
+            g.setFont(new Font("Arial", 1, 100));
+            g.drawString(String.valueOf(score), WIDTH/2-25, 100); //draw the score on the top
         }
         
         g.setColor(Color.red);
         g.setFont(new Font("Impact", 1, 40));
-        
         g.drawString("FORCE", WIDTH / 2 - 320, HEIGHT - 50);
         
-        
-        
-        if(gameOver)
-        {
-            g.setColor(Color.white);
-            g.setFont(new Font("Arial", 1, 40));
-            
-            g.drawString("This game is programmed by Qifan Yang & Ruobing(Icy) Chen.", 75, HEIGHT / 2);
-            
-            g.setColor(Color.yellow);
-            g.setFont(new Font("Arial", 1, 40));
-            
-            g.drawString("Click to restart the game.", 75, HEIGHT / 2 + 75);
-        }
+        g.setColor(Color.red);
+        g.setFont(new Font("Impact", 1, 30));
+        g.drawString("Life", 1440, 40);
         
     }
     
@@ -288,7 +321,17 @@ public class Jump implements ActionListener, MouseListener
         jumped = true;
         landed = false;
         mousePressed = false;
-        if(gameOver)
+        
+        if(gameOver && life > 0)
+        {
+            gameOver = false;
+            jumped = false;
+            
+            player.x = 180;
+            player.y = columns.get(0).y - 20; //initiallize the position of player
+        }
+        
+        if(gameOver && life == 0)
         {
             gameOver = false;
             jumped = false; //make sure there is no error when restart the game (won't drop from the top)
@@ -305,6 +348,8 @@ public class Jump implements ActionListener, MouseListener
             addColumn(true);
             addColumn(true);
             addColumn(true); //reload columns
+            
+            life = 3; //reset the lives
             
             player.x = 180;
             player.y = columns.get(0).y - 20; //initiallize the position of player
