@@ -1,4 +1,3 @@
-
 /**
  * This is a "Drop!" game for the final project.
  * 
@@ -73,7 +72,6 @@ public class Jump implements ActionListener, MouseListener
         life = 3; //players have three lives
               
         timer.start();
-        
     }
     
     public void addColumn(boolean start)
@@ -91,7 +89,6 @@ public class Jump implements ActionListener, MouseListener
             columns.add(new Rectangle(columns.get(columns.size() - 1).x + space, HEIGHT - height - 120, width, height));
             spaces.add(space); //save the space value into the space arraylist
         }
-        
     }
     
     public void paintColumn(Graphics g, Rectangle column)
@@ -144,9 +141,9 @@ public class Jump implements ActionListener, MouseListener
                 {
                     landed = true;
                     player.x = 180;
-                    score++;
                     for(int k = 0; k< i; k++)
                     {
+                        score++;
                         totalSpace += spaces.get(0);
                         columns.remove(0); 
                         spaces.remove(0);
@@ -168,7 +165,6 @@ public class Jump implements ActionListener, MouseListener
                 player.x = (int) (180 + (forceLength * 3.58974)); //3.58974 is the ratio of distance to force magnitude (1400/390)
                 player.y = 100;
             }
-            
         }
         renderer.repaint();
     }
@@ -289,7 +285,6 @@ public class Jump implements ActionListener, MouseListener
         g.setColor(Color.red);
         g.setFont(new Font("Impact", 1, 30));
         g.drawString("Life", 1440, 40);
-        
     }
     
     public static void main(String[] args)
