@@ -17,9 +17,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 
-public class Jump implements ActionListener, MouseListener
+public class Jump implements ActionListener, MouseListener, KeyListener
 {
     public static Jump jump;
     
@@ -27,11 +29,13 @@ public class Jump implements ActionListener, MouseListener
     
     public Renderer renderer;
     
+    public Trajectory traj;
+    
     public Rectangle player;
     
-    public int ticks, yMotion, time, totalSpace, score, force, forceLength, life, highestScore;
+    public int ticks, yMotion, time, totalSpace, score, hForce, hForceLength, vForce, vForceLength, life, highestScore, count = 0, index = 0, gravityMode = 1;
     
-    public boolean started, gameOver, jumped, landed, mousePressed;
+    public boolean started, gameOver, jumped = false, landed = true, mousePressed, intersect = false;
     
     public ArrayList<Rectangle> columns;
     
@@ -48,12 +52,14 @@ public class Jump implements ActionListener, MouseListener
         
         renderer = new Renderer();
         random=new Random();
+        traj = new Trajectory();
         
         jframe.setSize(WIDTH, HEIGHT);
         jframe.add(renderer);
         jframe.setVisible(true);
         jframe.setResizable(false);
-        jframe.addMouseListener(this); //set up of JFrame
+        jframe.addMouseListener(this);
+        jframe.addKeyListener(this);//set up of JFrame
         jframe.setTitle("Drop!");
         jframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //exit when click the close botton
         
@@ -102,12 +108,12 @@ public class Jump implements ActionListener, MouseListener
     {
         if(started && !gameOver)
         {
-            if(ticks % 2 ==0 && yMotion < 15)
+        	if(ticks % 2 == 0 && yMotion < 30)
             {
                 yMotion += 2;
             } //"gravity"
-            player.y += yMotion; //change the player position
-            
+            player.y += yMotion; //change the player position 
+        	
             if(player.y + yMotion >= HEIGHT - 120)
             {
                 player.y = HEIGHT - 120 - player.height;
@@ -116,19 +122,27 @@ public class Jump implements ActionListener, MouseListener
                 //restart = false;
             }
             
-            if(mousePressed)
+            if(mousePressed && count == 0)
             {
-                force += 4; //show the magnitude of force
+                hForce += 4; //show the magnitude of hForce       
+            }
+            else if(mousePressed && count == 1)
+            {
+            	vForce += 4;
             }
             
-            forceLength = force % 780;
-            if(forceLength >= 390)
+            hForceLength = hForce % 780;
+            if(hForceLength >= 390)
             {
-                forceLength = 780 - forceLength;
+                hForceLength = 780 - hForceLength;
             }
             
-            //time = (int) (forceLength * 3.64); //pass the force magnitude to the distance
-            
+            vForceLength = vForce % 780;
+            if(vForceLength >= 390)
+            {
+                vForceLength = 780 - vForceLength;
+            }
+	        
             if(player.y >= (HEIGHT - 120 - columns.get(0).y) && ((player.x + 20) > columns.get(0).x && player.x < (columns.get(0).x + 100)))
             {
                 player.y = columns.get(0).y - 20;
@@ -136,10 +150,12 @@ public class Jump implements ActionListener, MouseListener
             
             for(int i=0; i < columns.size(); i++)
             {
-                
-                if(columns.get(i).intersects(player) && (player.y) >= (columns.get(i).y) && !landed)
+                if(columns.get(i).intersects(player) && (player.y) <= (columns.get(i).y) && !landed)
                 {
                     landed = true;
+                    hForce = 0;
+                    vForce = 0;
+                    index = 0;
                     player.x = 180;
                     for(int k = 0; k< i; k++)
                     {
@@ -155,17 +171,34 @@ public class Jump implements ActionListener, MouseListener
                         columns.get(l).x = columns.get(l).x - totalSpace;
                     }
                     totalSpace = 0; //initialize
-                    
+                }
+                else if(columns.get(i).intersects(player) && (player.y) >= (columns.get(i).y) && !landed)
+                {
+                	intersect = true;
+                	player.x = columns.get(i).x - 20;
+                }
                 }
             }
             
             if(jumped)
             {
                 jumped = false;
-                player.x = (int) (180 + (forceLength * 3.58974)); //3.58974 is the ratio of distance to force magnitude (1400/390)
-                player.y = 100;
             }
+        
+        if(!intersect && !landed && !gameOver)
+        {
+        	if(gravityMode == 1)
+        	{
+        		index++;
+                player.x = (int) traj.getX(index); //3.58974 is the ratio of distance to hForce magnitude (1400/390)
+                player.y = (int) traj.getY(index);
+        	}
+        	else if(gravityMode == 2)
+        	{
+        		player.x += hForceLength * 15 / 200;
+        	}
         }
+        
         renderer.repaint();
     }
     
@@ -184,10 +217,12 @@ public class Jump implements ActionListener, MouseListener
         g.fillRect(player.x, player.y, player.width, player.height); //player
         
         g.setColor(Color.white);
-        g.fillRect(WIDTH / 2 - 200, HEIGHT-90, 400, 50); //force
+        g.fillRect(WIDTH / 2 - 200, HEIGHT-90, 400, 50); //hForce
+        g.fillRect(10, HEIGHT / 2 - 200, 50, 400);
         
         g.setColor(Color.red);
-        g.fillRect(WIDTH / 2 - 195, HEIGHT-85, forceLength, 40); //magintude of force
+        g.fillRect(WIDTH / 2 - 195, HEIGHT-85, hForceLength, 40); //Magnitude of hForce
+        g.fillRect(15, HEIGHT / 2 + 195 - vForceLength, 40, vForceLength);
         
         if(life == 3)
         {
@@ -234,22 +269,17 @@ public class Jump implements ActionListener, MouseListener
         {
             g.setColor(Color.white);
             g.setFont(new Font("Arial", 1, 100));
-            g.drawString("Press the mouse to start!", 100, HEIGHT / 2-50);
+            g.drawString("Press the mouse", 100, HEIGHT / 2-50);
+            g.drawString("or hold any key to start!", 100, HEIGHT / 2+50);
         }
         
-        if(gameOver && life > 1)
+        if(gameOver && life >= 1)
         {
             g.setColor(Color.white);
             g.setFont(new Font("Arial", 1, 100));
             g.drawString("Click to jump again.", 75, HEIGHT / 2-50);
         }
         
-        if(gameOver && life == 1)
-        {
-            g.setColor(Color.white);
-            g.setFont(new Font("Arial", 1, 100));
-            g.drawString("Click to jump again.", 75, HEIGHT / 2-50);
-        }
         
         if(gameOver && life == 0)
         {
@@ -278,13 +308,31 @@ public class Jump implements ActionListener, MouseListener
             g.drawString(String.valueOf(score), WIDTH/2-25, 100); //draw the score on the top
         }
         
-        g.setColor(Color.red);
-        g.setFont(new Font("Impact", 1, 40));
-        g.drawString("FORCE", WIDTH / 2 - 320, HEIGHT - 50);
+        if(count == 0)
+        {
+        	 g.setColor(Color.red);
+             g.setFont(new Font("Impact", 1, 40));
+             g.drawString("Horizontal Force", WIDTH / 2 - 500, HEIGHT - 50);
+             
+             g.setColor(Color.yellow);
+             g.setFont(new Font("Impact", 1, 40));
+             g.drawString("Vertical Force", 10, 180);
+        }
+        
+        if(count == 1)
+        {
+        	 g.setColor(Color.yellow);
+             g.setFont(new Font("Impact", 1, 40));
+             g.drawString("Horizontal Force", WIDTH / 2 - 500, HEIGHT - 50);
+             
+             g.setColor(Color.red);
+             g.setFont(new Font("Impact", 1, 40));
+             g.drawString("Vertical Force", 10, 180);
+        }
         
         g.setColor(Color.red);
         g.setFont(new Font("Impact", 1, 30));
-        g.drawString("Life", 1440, 40);
+        g.drawString("LIVES", 1420, 40);
     }
     
     public static void main(String[] args)
@@ -292,44 +340,62 @@ public class Jump implements ActionListener, MouseListener
         jump = new Jump();
     }
     
-    @Override
-    public void mouseClicked(MouseEvent e)
+    public void pressed()
     {
-        
-    }
-    
-    @Override
-    public void mousePressed(MouseEvent e)
-    {
-        started = true;
-        mousePressed = true;
-        force = 0;
+    	started = true;     
         if(gameOver)
         {
-            mousePressed = false; //when restart the game, this step won't trigger the force notation
+            mousePressed = false; //when restart the game, this step won't trigger the hForce notation
         } //to restart the game
+        
+        if(landed)
+        {
+        	//hForce = 0;
+        	mousePressed = true;
+        }
     }
     
-    @Override
-    public void mouseReleased(MouseEvent e)
+    public void released()
     {
-        jumped = true;
-        landed = false;
-        mousePressed = false;
+    	if(landed && count == 0)
+    	{
+    		count++;
+    		mousePressed = false;
+    	}
+    	else if(landed)
+    	{
+	    	jumped = true;
+	        landed = false;
+	        mousePressed = false;
+	        intersect = false;
+	        count = 0;
+	        traj.newTraj(hForceLength, vForceLength, player.y);
+	        if(gravityMode == 2)
+	        {
+	        	yMotion = -(vForceLength / 6);
+	        }
+        }
         
         if(gameOver && life > 0)
         {
             gameOver = false;
             jumped = false;
+            landed = true;
+            intersect = false;
+            hForce = 0;
+            vForce = 0;
+            index = 0;
             
             player.x = 180;
-            player.y = columns.get(0).y - 20; //initiallize the position of player
+            player.y = columns.get(0).y - 20; //Initialize the position of player
         }
         
         if(gameOver && life == 0)
         {
             gameOver = false;
             jumped = false; //make sure there is no error when restart the game (won't drop from the top)
+            landed = true;
+            intersect = false;
             score = 0; //clean the score from the last game
             
             columns.clear();
@@ -345,10 +411,31 @@ public class Jump implements ActionListener, MouseListener
             addColumn(true); //reload columns
             
             life = 3; //reset the lives
+            hForce = 0;
+            vForce = 0;
+            index = 0;
             
             player.x = 180;
-            player.y = columns.get(0).y - 20; //initiallize the position of player
+            player.y = columns.get(0).y - 20; //Initialize the position of player
         } //to restart the game
+    }
+    
+    @Override
+    public void mouseClicked(MouseEvent e)
+    {
+        
+    }
+    
+    @Override
+    public void mousePressed(MouseEvent e)
+    {
+    	pressed();
+    }
+    
+    @Override
+    public void mouseReleased(MouseEvent e)
+    {
+        released();
     }
     
     @Override
@@ -363,4 +450,46 @@ public class Jump implements ActionListener, MouseListener
         
     }
     
+    public void keyPressed(KeyEvent e)
+    {
+    	if(e.getKeyCode() == KeyEvent.VK_1 || e.getKeyCode() == KeyEvent.VK_2)
+    	{
+    		
+    	}
+    	else
+    	{
+    		pressed();
+    	}
+    }
+    
+    public void keyReleased(KeyEvent e)
+    {
+    	if(e.getKeyCode() == KeyEvent.VK_1)
+    	{
+    		gravityMode = 1;
+    	}
+    	else if(e.getKeyCode() == KeyEvent.VK_2)
+    	{
+    		gravityMode = 2;
+    	}
+    	else
+    	{
+        	released();
+    	}
+    }
+    
+    public void keyTyped(KeyEvent e)
+    {
+        
+    }
+    
+    public void gravity1()
+    {
+    	
+    }
+    
+    public void gravity2()
+    {
+    	
+    }
 }
