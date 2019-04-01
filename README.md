@@ -10,3 +10,5 @@ Tutorial of Java: http://www.runoob.com/java/java-tutorial.html
 Programmer: Qifan Yang
 Date: 12/9/2018
 Date for Version 2: 3/16/2019
+
+<a href="https://996.icu"><img src="https://img.shields.io/badge/link-996.icu-red.svg" alt="996.icu"></a>
